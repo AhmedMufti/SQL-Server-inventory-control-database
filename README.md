@@ -60,13 +60,39 @@ EXEC usp_DetectLowStockItems;
 ## Schema
 
 ```
-ProductCategories (1) ──── (*) Products (1) ──┬── (*) InventoryTransactions
-                                              └── (*) LowStockAlerts
++-------------------+       +---------------------------+
+| ProductCategories |       |         Products          |
++-------------------+       +---------------------------+
+| CategoryID (PK)   |<──────| CategoryID (FK)           |
+| CategoryName      |       | ProductID (PK)            |
+| Description       |       | SKU (unique)              |
++-------------------+       | ProductName               |
+                            | UnitCost, UnitPrice       |
+                            | StockQuantity             |
+                            | ReorderLevel              |
+                            | CreatedAt, ModifiedAt     |
+                            +-------------+-------------+
+                                          |
+                    +---------------------+---------------------+
+                    |                                           |
+                    v                                           v
++-------------------------------+           +---------------------------+
+|    InventoryTransactions      |           |      LowStockAlerts       |
++-------------------------------+           +---------------------------+
+| TransactionID (PK)            |           | AlertID (PK)              |
+| ProductID (FK)                |           | ProductID (FK)            |
+| TransactionType (IN/OUT)      |           | CurrentStock              |
+| Quantity                      |           | ReorderLevel              |
+| ReferenceType, ReferenceNumber|           | AlertSeverity             |
+| StockBefore, StockAfter       |           | AlertMessage              |
+| TransactionDate               |           | IsAcknowledged            |
++-------------------------------+           +---------------------------+
 ```
 
-- `Products` tracks SKU, pricing, current stock, and reorder thresholds
-- `InventoryTransactions` logs every stock movement with before/after snapshots
-- `LowStockAlerts` stores warnings when stock drops below reorder level
+**Key relationships:**
+- Each product belongs to one category (optional)
+- Transactions record stock IN/OUT with before/after snapshots for auditing
+- Alerts are generated when stock falls below reorder level
 
 ## Notes
 
